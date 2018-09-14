@@ -44,17 +44,27 @@ def bfs(graph, places):
     """
     solution = Solution(places, graph)
     frontier = Queue()
+    final_solution = None
     frontier.put(solution)
-    while frontier:
-        current_sol = frontier.get();
+    while frontier.qsize() > 0:
+        current_sol = frontier.get()
+        print("-------")
+        print(current_sol.visited)
+        print(current_sol.g)
         if current_sol.visited[-1] == places[-1]:
-            return current_sol
+            if final_solution is None or current_sol.g < final_solution.g:
+                final_solution = current_sol
+                print("final solution = ", final_solution.g)
         else:
             for attraction in current_sol.not_visited[:-1]:
                 new_sol = copy.deepcopy(current_sol)
                 new_sol.add(places.index(attraction))
                 frontier.put(new_sol)
-    return None
+            if len(current_sol.not_visited) == 1:
+                new_sol = copy.deepcopy(current_sol)
+                new_sol.add(places.index(current_sol.not_visited[0]))
+                frontier.put(new_sol)
+    return final_solution
 
 ####################################################
 #               1.2 EXPERIMENTATION                #
@@ -63,7 +73,7 @@ graph = read_graph()
 
 #test 1  --------------  OPT. SOL. = 27
 start_time = time.time()
-places=[0, 5, 13, 16, 6, 9, 4]
+places=[0, 2, 7, 13, 11, 16, 15, 7, 9, 8, 4]
 sol = bfs(graph=graph, places=places)
 print(sol.g)
 print("--- %s seconds ---" % (time.time() - start_time))

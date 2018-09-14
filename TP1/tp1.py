@@ -27,7 +27,7 @@ class Solution:
         """
         current_place = self.visited[-1] #get the last place
         next_place = places[idx]
-        g += graph[current_place,next_place]
+        self.g += self.graph[current_place,next_place]
         self.visited.append(next_place)
         self.not_visited.remove(next_place)
 
@@ -39,8 +39,22 @@ def read_graph():
 def bfs(graph, places):
     """
     Returns the best solution which spans over all attractions indicated in 'places'
-    """
 
+
+    """
+    solution = Solution(places, graph)
+    frontier = Queue()
+    frontier.put(solution)
+    while frontier:
+        current_sol = frontier.get();
+        if current_sol.visited[-1] == places[-1]:
+            return current_sol
+        else:
+            for attraction in current_sol.not_visited[:-1]:
+                new_sol = copy.deepcopy(current_sol)
+                new_sol.add(places.index(attraction))
+                frontier.put(new_sol)
+    return None
 
 ####################################################
 #               1.2 EXPERIMENTATION                #

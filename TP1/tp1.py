@@ -12,9 +12,10 @@ class Solution:
     def __init__(self, places, graph):
         """
         places: a list containing the indices of attractions to visit
-        p1 = places[0]
-        pm = places[-1]
+        p1 = places[0]     est le sommet de départ.
+        pm = places[-1]    est le sommet d'arrivé.
         """
+        #Init : Créer la solution racine (S_root)
         self.g = 0  # current cost
         self.graph = graph
         self.visited = [places[0]]  # list of already visited attractions
@@ -24,6 +25,11 @@ class Solution:
         """
         Adds the point in position idx of not_visited list to the solution
         """
+        current_place = self.visited[-1] #get the last place
+        next_place = places[idx]
+        g += graph[current_place,next_place]
+        self.visited.append(next_place)
+        self.not_visited.remove(next_place)
 
 
 def read_graph():
@@ -35,7 +41,15 @@ def bfs(graph, places):
     Returns the best solution which spans over all attractions indicated in 'places'
     """
 
+
 ####################################################
 #               1.2 EXPERIMENTATION                #
 ####################################################
 graph = read_graph()
+
+#test 1  --------------  OPT. SOL. = 27
+start_time = time.time()
+places=[0, 5, 13, 16, 6, 9, 4]
+sol = bfs(graph=graph, places=places)
+print(sol.g)
+print("--- %s seconds ---" % (time.time() - start_time))

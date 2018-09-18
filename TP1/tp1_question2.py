@@ -1,0 +1,98 @@
+import numpy as np
+import copy
+from queue import Queue
+import time
+import heapq
+
+
+####################################################
+#      DEFINITION DE CLASSES ET DE FONCTIONS       #
+####################################################
+def fastest_path_estimation(sol):
+    """
+    Returns the time spent on the fastest path between
+    the current vertex c and the ending vertex pm
+    """
+    # c = sol.visited[-1]
+    # pm = sol.not_visited[-1]
+    return 0 #!!!!!!!! À FAIRE !!!!!!!!!!!!!!!!!!!!!!!!
+
+class Solution:
+    def __init__(self, places, graph):
+        """
+        places: a list containing the indices of attractions to visit
+        p1 = places[0]     est le sommet de départ.
+        pm = places[-1]    est le sommet d'arrivé.
+        """
+        #Init : Créer la solution racine (S_root)
+        self.g = 0  # current cost
+        self.graph = graph
+        self.visited = [places[0]]  # list of already visited attractions
+        self.not_visited = copy.deepcopy(places[1:])  # list of attractions not yet visited
+        #Attributs ajoutés à la question 2.
+        self.h = 0
+
+    #Surchargé l'opérateur <
+    def __lt__(self, other):
+        return self.g + self.h < other.g + other.h
+
+    def add(self, idx):
+        """
+        Adds the point in position idx of not_visited list to the solution
+        """
+        current_place = self.visited[-1] #get the last place
+        next_place = places[idx]
+        self.g += self.graph[current_place,next_place]
+        self.visited.append(next_place)
+        self.not_visited.remove(next_place)
+        self.h = fastest_path_estimation(self)
+
+
+def read_graph():
+    return np.loadtxt("contexte/TP1/montreal", dtype='i', delimiter=',')
+
+
+def A_star(graph, places):
+    """
+    Performs the A* algorithm
+    """
+    # 1. blank solution
+    root = Solution(graph=graph, places=places)
+    # search tree T
+    T = []
+    heapq.heapify(T)
+    heapq.heappush(T, root)
+    found = False
+
+    while not found:
+        current_sol = heapq.heappop(T)
+        print("-------")
+        print(current_sol.visited)
+        print(current_sol.g + current_sol.h)
+        #2. g + fastest_path_estimation(sol)
+        for attraction in current_sol.not_visited[:-1]:
+            new_sol = copy.deepcopy(current_sol)
+            new_sol.add(places.index(attraction))
+            heapq.heappush(T, new_sol)
+        #S'il reste une seule attraction à visiter.
+        if len(current_sol.not_visited) == 1:
+            new_sol = copy.deepcopy(current_sol)
+            new_sol.add(places.index(current_sol.not_visited[0]))
+            heapq.heappush(T, new_sol)
+            found = True
+            return new_sol
+    return None
+
+
+####################################################
+#               1.2 EXPERIMENTATION                #
+####################################################
+graph = read_graph()
+
+#test 1  --------------  OPT. SOL. = 27
+start_time = time.time()
+places=[0, 5, 13, 16, 6, 9, 4]
+astar_sol = A_star(graph=graph, places=places)
+print(astar_sol.g)
+print(astar_sol.visited)
+print("--- %s seconds ---" % (time.time() - start_time))

@@ -37,7 +37,6 @@ class Solution:
         self.visited[index1], self.visited[index2] = self.visited[index2], self.visited[index1]
         self.g = 0
         for i in range (len(self.visited)-1):
-            print(self.g)
             self.g += self.graph[self.visited[i], self.visited[i+1]]
 
 def shaking(sol, k):
@@ -53,7 +52,36 @@ def shaking(sol, k):
     return sol
 
 def local_search_2opt(sol):
-    for i in range()
+    print("-----------------local_search_2opt-----------------")
+    #init
+    current_solution = copy.deepcopy(sol)
+    index1 = 1
+    found_local_optimum = False
+    found_better_cost = False
+
+    while not found_local_optimum:
+        print(current_solution.visited)
+        print(current_solution.g)
+        #Considérer chaque pair d'indice i, j
+        for i in range(index1,len(sol.visited)-3):
+            for j in range(i+2, len(sol.visited)-1):
+                if not found_better_cost:
+                    # Si l’échange donne un plus bas coût, on le réalise
+                    sol.swap(i,j)
+                    if sol.g < current_solution.g:
+                        found_better_cost = True
+                        break
+                    else:
+                        sol.swap(i,j) #swap back.
+            if found_better_cost:
+                break
+
+        if found_better_cost :
+            current_solution = copy.deepcopy(sol)
+            found_better_cost = False
+        else:
+            found_local_optimum = True
+            return current_solution
 
 def read_graph():
     return np.loadtxt("contexte/TP1/montreal", dtype='i', delimiter=',')
@@ -91,6 +119,7 @@ def dfs(solution, places):
 ####################################################
 graph = read_graph()
 
-places=[0, 5, 13, 16, 6, 9, 4]
+places=[0, 2, 20, 3, 18, 12, 13, 5, 11, 16, 15, 4, 9, 14, 1]
 sol = initial_sol(graph=graph, places=places)
-shaking(sol, 3)
+
+local_search_2opt(sol)

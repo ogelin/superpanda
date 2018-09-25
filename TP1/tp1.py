@@ -73,7 +73,7 @@ graph = read_graph()
 
 #test 1  --------------  OPT. SOL. = 27
 start_time = time.time()
-places=[0, 2, 7, 13, 11, 16, 15, 7, 9, 8, 4]
+places=[0, 2, 7, 13, 11, 4]
 sol = bfs(graph=graph, places=places)
 print(sol.g)
 print("--- %s seconds ---" % (time.time() - start_time))

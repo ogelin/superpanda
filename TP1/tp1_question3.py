@@ -33,6 +33,27 @@ class Solution:
         self.visited.append(next_place)
         self.not_visited.remove(next_place)
 
+    def swap(self, index1, index2):
+        self.visited[index1], self.visited[index2] = self.visited[index2], self.visited[index1]
+        self.g = 0
+        for i in range (len(self.visited)-1):
+            print(self.g)
+            self.g += self.graph[self.visited[i], self.visited[i+1]]
+
+def shaking(sol, k):
+    for i in range(k):
+        index1 = random.randrange(1, len(sol.visited[:-1]))
+
+        index2 = random.randrange(1, len(sol.visited[:-1]))
+        while index1 == index2:
+            index2 = random.randrange(1, len(sol.visited[:-1]))
+        sol.swap(index1, index2)
+        print(sol.visited)
+        print(sol.g)
+    return sol
+
+def local_search_2opt(sol):
+    for i in range()
 
 def read_graph():
     return np.loadtxt("contexte/TP1/montreal", dtype='i', delimiter=',')
@@ -44,7 +65,6 @@ def initial_sol(graph, places):
     """
     solution = Solution(places, graph)
     return dfs(solution, places)
-
 
 def dfs(solution, places):
     """
@@ -73,3 +93,4 @@ graph = read_graph()
 
 places=[0, 5, 13, 16, 6, 9, 4]
 sol = initial_sol(graph=graph, places=places)
+shaking(sol, 3)

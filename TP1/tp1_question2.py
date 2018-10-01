@@ -8,48 +8,51 @@ import heapq
 ####################################################
 #      DEFINITION DE CLASSES ET DE FONCTIONS       #
 ####################################################
-def fastest_path_estimation(sol):
+def fastest_path_estimation(sol,solverType):
     """
     Returns the time spent on the fastest path between
     the current vertex c and the ending vertex pm
     """
-    c = sol.visited[-1]
-    # pm = sol.not_visited[-1]
-    # define variables
-    unseenNodes = [0]*(len(sol.not_visited)+1)
-    unseenNodes[0] = c
-    unseenNodes[1:] = copy.deepcopy(sol.not_visited)
-    totalNodes = copy.deepcopy(unseenNodes)
-    infinity = 9999999
-    shortest_distance = [infinity]*len(unseenNodes)
-    #predecessor = [0]*len(unseenNodes)
-    #initialize variables
-  
-    shortest_distance[0] = 0
-    
-    #visit each node and update weights for al children
-    while unseenNodes: # this while visits each node starting from start node
-        minNode = None
-        for node in unseenNodes: # this for chooses the unvisisted node with the lowest distance
-            node_index = totalNodes.index(node)
-            if minNode is None:
-                minNode = node
-                minNode_index = totalNodes.index(minNode)
-            elif shortest_distance[node_index] < shortest_distance[minNode_index]:
-                minNode = node
-                minNode_index = totalNodes.index(minNode)
-            allNodes = copy.deepcopy(unseenNodes) #each time we visit a node, its children are all the other unseen nodes
-            popidx = allNodes.index(minNode)
-            allNodes.pop(popidx)
-        for childNode in allNodes:
-            child_weight = sol.graph[minNode,childNode]
-            childNode_index = totalNodes.index(childNode)
-            if (child_weight+ shortest_distance[minNode_index]) < shortest_distance[childNode_index]:
-                shortest_distance[childNode_index] = child_weight + shortest_distance[minNode_index]
-               # predecessor[childNode_index] = minNode
-        popidx = unseenNodes.index(minNode)
-        unseenNodes.pop(popidx)
-    return shortest_distance[-1] #!!!!!!!! À vérifier !!!!!!!!!!!!!!!!!!!!!!!!
+    if solverType == 1: # solverType  == 1 means dijkstra
+        c = sol.visited[-1]
+        # pm = sol.not_visited[-1]
+        # define variables
+        unseenNodes = [0]*(len(sol.not_visited)+1)
+        unseenNodes[0] = c
+        unseenNodes[1:] = copy.deepcopy(sol.not_visited)
+        totalNodes = copy.deepcopy(unseenNodes)
+        infinity = 9999999
+        shortest_distance = [infinity]*len(unseenNodes)
+        #predecessor = [0]*len(unseenNodes)
+        #initialize variables
+      
+        shortest_distance[0] = 0
+        
+        #visit each node and update weights for al children
+        while unseenNodes: # this while visits each node starting from start node
+            minNode = None
+            for node in unseenNodes: # this for chooses the unvisisted node with the lowest distance
+                node_index = totalNodes.index(node)
+                if minNode is None:
+                    minNode = node
+                    minNode_index = totalNodes.index(minNode)
+                elif shortest_distance[node_index] < shortest_distance[minNode_index]:
+                    minNode = node
+                    minNode_index = totalNodes.index(minNode)
+                allNodes = copy.deepcopy(unseenNodes) #each time we visit a node, its children are all the other unseen nodes
+                popidx = allNodes.index(minNode)
+                allNodes.pop(popidx)
+            for childNode in allNodes:
+                child_weight = sol.graph[minNode,childNode]
+                childNode_index = totalNodes.index(childNode)
+                if (child_weight+ shortest_distance[minNode_index]) < shortest_distance[childNode_index]:
+                    shortest_distance[childNode_index] = child_weight + shortest_distance[minNode_index]
+                   # predecessor[childNode_index] = minNode
+            popidx = unseenNodes.index(minNode)
+            unseenNodes.pop(popidx)
+    elif solverType == 0:
+        # TODO: write Edmonds algorithm for minimum spanning arborescence
+    return shortest_distance[-1] 
 
 class Solution:
     def __init__(self, places, graph):
@@ -79,7 +82,7 @@ class Solution:
         self.g += self.graph[current_place,next_place]
         self.visited.append(next_place)
         self.not_visited.remove(next_place)
-        self.h = fastest_path_estimation(self)
+        self.h = fastest_path_estimation(self,0) # second input is solvertype. 1 for dijsktra 0 for MSA
 
 
 def read_graph():

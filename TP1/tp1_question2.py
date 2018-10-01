@@ -100,9 +100,9 @@ def A_star(graph, places):
 
     while not found:
         current_sol = heapq.heappop(T)
-        print("-------")
-        print(current_sol.visited)
-        print(current_sol.g + current_sol.h)
+        #print("-------")
+        #print(current_sol.visited)
+        #print(current_sol.g + current_sol.h)
         #2. g + fastest_path_estimation(sol)
         for attraction in current_sol.not_visited[:-1]:
             new_sol = copy.deepcopy(current_sol)
@@ -127,6 +127,30 @@ graph = read_graph()
 start_time = time.time()
 places=[0, 5, 13, 16, 6, 9, 4]
 astar_sol = A_star(graph=graph, places=places)
-print(astar_sol.g)
-print(astar_sol.visited)
-print("--- %s seconds ---" % (time.time() - start_time))
+print('test 1 cost: ',astar_sol.g) # result = 27
+print(astar_sol.visited)            # result = [0, 5, 13, 16, 6, 9, 4]
+print("--- %s seconds ---" % (time.time() - start_time)) # result = 0.02281665802001953 seconds
+
+#test 2  --------------  OPT. SOL. = 30
+start_time = time.time()
+places=[0, 1, 4, 9, 20, 18, 16, 5, 13, 19]
+astar_sol = A_star(graph=graph, places=places)
+print('test2 cost: ',astar_sol.g)       # result = 30
+print(astar_sol.visited)                # result = [0, 1, 4, 5, 9, 13, 16, 18, 20, 19]
+print("--- %s seconds ---" % (time.time() - start_time)) # = 0.22220897674560547 seconds
+
+#test 3  --------------  OPT. SOL. = 26
+start_time = time.time()
+places=[0, 2, 7, 13, 11, 16, 15, 7, 9, 8, 4]
+astar_sol = A_star(graph=graph, places=places)
+print('test 3 cost: ',astar_sol.g)      # result = 26
+print(astar_sol.visited)                # result = [0, 2, 7, 7, 9, 13, 15, 16, 11, 8, 4]
+print("--- %s seconds ---" % (time.time() - start_time)) # = 0.6775338649749756 seconds
+
+#test 4  --------------  OPT. SOL. = 40
+start_time = time.time()
+places=[0, 2, 20, 3, 18, 12, 13, 5, 11, 16, 15, 4, 9, 14, 1]
+astar_sol = A_star(graph=graph, places=places)
+print('test 4 cost: ', astar_sol.g)     # result = 40
+print(astar_sol.visited)                # result = [0, 3, 5, 13, 15, 18, 20, 16, 11, 12, 14, 9, 4, 2, 1]
+print("--- %s seconds ---" % (time.time() - start_time))# = 190.72970151901245 seconds

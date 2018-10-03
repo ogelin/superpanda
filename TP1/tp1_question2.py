@@ -3,11 +3,28 @@ import copy
 from queue import Queue
 import time
 import heapq
+import edmonds
 
 
 ####################################################
 #      DEFINITION DE CLASSES ET DE FONCTIONS       #
 ####################################################
+
+def convert2dict(sol):
+    c = sol.visited[-1]
+    unseenNodes = [0]*(len(sol.not_visited)+1)
+    unseenNodes[0] = c
+    unseenNodes[1:] = copy.deepcopy(sol.not_visited)
+    g= {}
+    for n in unseenNodes:
+        g[n] = {}
+        for v in unseenNodes:
+            if v == n:
+                continue
+            else:
+                g[n][v] = sol.graph[n,v]
+    return g
+        
 def fastest_path_estimation(sol,solverType):
     """
     Returns the time spent on the fastest path between
@@ -50,9 +67,17 @@ def fastest_path_estimation(sol,solverType):
                    # predecessor[childNode_index] = minNode
             popidx = unseenNodes.index(minNode)
             unseenNodes.pop(popidx)
+        h = shortest_distance[-1]
     elif solverType == 0:
-        # TODO: write Edmonds algorithm for minimum spanning arborescence
-    return shortest_distance[-1] 
+        G = convert2dict(sol)
+        c = sol.visited[-1]
+        msa = edmonds.mst(c,G)
+        h = 0
+        for node in msa:
+            for v in msa[node]:
+                 h += msa[node][v]
+                 
+    return  h
 
 class Solution:
     def __init__(self, places, graph):
@@ -82,7 +107,7 @@ class Solution:
         self.g += self.graph[current_place,next_place]
         self.visited.append(next_place)
         self.not_visited.remove(next_place)
-        self.h = fastest_path_estimation(self,0) # second input is solvertype. 1 for dijsktra 0 for MSA
+        self.h = fastest_path_estimation(self,0)#second input is solvertype. 1 for dijsktra 0 for MSA
 
 
 def read_graph():
@@ -132,7 +157,9 @@ places=[0, 5, 13, 16, 6, 9, 4]
 astar_sol = A_star(graph=graph, places=places)
 print('test 1 cost: ',astar_sol.g) # result = 27
 print(astar_sol.visited)            # result = [0, 5, 13, 16, 6, 9, 4]
-print("--- %s seconds ---" % (time.time() - start_time)) # result = 0.02281665802001953 seconds
+print("--- %s seconds ---" % (time.time() - start_time)) 
+# resultD= 0.02281665802001953 seconds
+# results E = 0.008932828903198242 seconds
 
 #test 2  --------------  OPT. SOL. = 30
 start_time = time.time()
@@ -140,7 +167,9 @@ places=[0, 1, 4, 9, 20, 18, 16, 5, 13, 19]
 astar_sol = A_star(graph=graph, places=places)
 print('test2 cost: ',astar_sol.g)       # result = 30
 print(astar_sol.visited)                # result = [0, 1, 4, 5, 9, 13, 16, 18, 20, 19]
-print("--- %s seconds ---" % (time.time() - start_time)) # = 0.22220897674560547 seconds
+print("--- %s seconds ---" % (time.time() - start_time)) 
+# = 0.22220897674560547 seconds
+# results E = 0.0267794132232666 seconds
 
 #test 3  --------------  OPT. SOL. = 26
 start_time = time.time()
@@ -148,7 +177,9 @@ places=[0, 2, 7, 13, 11, 16, 15, 7, 9, 8, 4]
 astar_sol = A_star(graph=graph, places=places)
 print('test 3 cost: ',astar_sol.g)      # result = 26
 print(astar_sol.visited)                # result = [0, 2, 7, 7, 9, 13, 15, 16, 11, 8, 4]
-print("--- %s seconds ---" % (time.time() - start_time)) # = 0.6775338649749756 seconds
+print("--- %s seconds ---" % (time.time() - start_time))
+ # = 0.6775338649749756 seconds
+ # result E = 0.03422260284423828 seconds
 
 #test 4  --------------  OPT. SOL. = 40
 start_time = time.time()
@@ -156,4 +187,6 @@ places=[0, 2, 20, 3, 18, 12, 13, 5, 11, 16, 15, 4, 9, 14, 1]
 astar_sol = A_star(graph=graph, places=places)
 print('test 4 cost: ', astar_sol.g)     # result = 40
 print(astar_sol.visited)                # result = [0, 3, 5, 13, 15, 18, 20, 16, 11, 12, 14, 9, 4, 2, 1]
-print("--- %s seconds ---" % (time.time() - start_time))# = 190.72970151901245 seconds
+print("--- %s seconds ---" % (time.time() - start_time))
+# = 190.72970151901245 seconds
+# results E = 1.5668628215789795 seconds

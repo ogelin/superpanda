@@ -4,7 +4,7 @@ Created on Wed Oct  3 12:54:22 2018
 
 @author: L.G
 """
-
+import copy
 import sys
 
 def _load(arcs,weights):

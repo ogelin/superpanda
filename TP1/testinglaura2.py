@@ -1,58 +1,23 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Oct 10 14:11:47 2018
+
+@author: L.G
+"""
+
 import numpy as np
 import copy
+from queue import Queue
 import time
 import heapq
+import copy
 import sys
-
 
 ####################################################
 #      DEFINITION DE CLASSES ET DE FONCTIONS       #
 ####################################################
 
-       
-def fastest_path_estimation(sol):
-    
-    #Returns the time spent on the fastest path between
-    #the current vertex c and the ending vertex pm
-    
-    c = sol.visited[-1]
-    # pm = sol.not_visited[-1]
-    # define variables
-    unseenNodes = [0]*(len(sol.not_visited)+1)
-    unseenNodes[0] = c
-    unseenNodes[1:] = copy.deepcopy(sol.not_visited)
-    totalNodes = copy.deepcopy(unseenNodes)
-    infinity = 9999999
-    shortest_distance = [infinity]*len(unseenNodes)
-    #predecessor = [0]*len(unseenNodes)
-    #initialize variables
-      
-    shortest_distance[0] = 0
-        
-    #visit each node and update weights for al children
-    while unseenNodes: # this while visits each node starting from start node
-        minNode = None
-        for node in unseenNodes: # this for chooses the unvisisted node with the lowest distance
-            node_index = totalNodes.index(node)
-            if minNode is None:
-                minNode = node
-                minNode_index = totalNodes.index(minNode)
-            elif shortest_distance[node_index] < shortest_distance[minNode_index]:
-                minNode = node
-                minNode_index = totalNodes.index(minNode)
-            allNodes = copy.deepcopy(unseenNodes) #each time we visit a node, its children are all the other unseen nodes
-            popidx = allNodes.index(minNode)
-            allNodes.pop(popidx)
-        for childNode in allNodes:
-            child_weight = sol.graph[minNode,childNode]
-            childNode_index = totalNodes.index(childNode)
-            if (child_weight+ shortest_distance[minNode_index]) < shortest_distance[childNode_index]:
-                shortest_distance[childNode_index] = child_weight + shortest_distance[minNode_index]
-                # predecessor[childNode_index] = minNode
-        popidx = unseenNodes.index(minNode)
-        unseenNodes.pop(popidx)
-    h = shortest_distance[-1]
-    return  h
+#######################################################EDMONDS FILE############
 
 def _findCycles(n, g, visited=None, cycle=None):
     if visited is None:
@@ -67,6 +32,8 @@ def _findCycles(n, g, visited=None, cycle=None):
         if e not in visited:
             cycle = _findCycles(e,g,visited,cycle)
     return cycle
+
+###############################################################################
 
 def minimum_spanning_arborescence(sol):
     #step 1: create a dictionary representation of the weighted directed graph
@@ -90,7 +57,7 @@ def minimum_spanning_arborescence(sol):
                 RG[dst][src] = cc
             else:
                 RG[dst] = { src : cc }
-    #step 2: create first graph with minumum predecessors for each node   
+   
     if c in RG:
         RG[c] = {}
     g = {}
@@ -107,7 +74,7 @@ def minimum_spanning_arborescence(sol):
             g[d][s] = RG[s][d]
         else:
             g[d] = { s : RG[s][d] }
-    #step 3: retreive all cycles from initial graph               
+            
     cycles = []
     visited = set()
     for n in g:
@@ -122,7 +89,7 @@ def minimum_spanning_arborescence(sol):
                 rg[dst2][src2] = cc2
             else:
                 rg[dst2] = { src2 : cc2 }
-    #Step 4: colapse all cycles to obtain arborescence graph msa                    
+                    
     for cycle in cycles:
         if c in cycle:
             continue
@@ -202,8 +169,8 @@ class Solution:
         self.g += self.graph[current_place,next_place]
         self.visited.append(next_place)
         self.not_visited.remove(next_place)
-        self.h = fastest_path_estimation(self)#second input is solvertype. 1 for dijsktra 0 for MSA
-        #self.h = minimum_spanning_arborescence(self)
+        self.h = minimum_spanning_arborescence(self)#second input is solvertype. 1 for dijsktra 0 for MSA
+
 
 def read_graph():
     return np.loadtxt("contexte/TP1/montreal", dtype='i', delimiter=',')

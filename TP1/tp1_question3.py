@@ -42,7 +42,6 @@ class Solution:
 def shaking(sol, k):
     for i in range(k):
         index1 = random.randrange(1, len(sol.visited[:-1]))
-
         index2 = random.randrange(1, len(sol.visited[:-1]))
         while index1 == index2:
             index2 = random.randrange(1, len(sol.visited[:-1]))

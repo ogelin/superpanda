@@ -202,7 +202,7 @@ class Solution:
         self.g += self.graph[current_place,next_place]
         self.visited.append(next_place)
         self.not_visited.remove(next_place)
-        self.h = fastest_path_estimation(self)#second input is solvertype. 1 for dijsktra 0 for MSA
+        self.h = fastest_path_estimation(self)
         #self.h = minimum_spanning_arborescence(self)
 
 def read_graph():

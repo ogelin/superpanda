@@ -39,8 +39,6 @@ def read_graph():
 def bfs(graph, places):
     """
     Returns the best solution which spans over all attractions indicated in 'places'
-
-
     """
     solution = Solution(places, graph)
     frontier = Queue()

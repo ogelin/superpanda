@@ -89,7 +89,6 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
             prev_loss = loss
 
-        #self.theta_= self.theta_
         return self
 
     """
@@ -221,8 +220,8 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         # initialize empty one hot matrix with 0s
         one_hot_matrix = [[0 for col in range(number_of_classes)] for row in range(number_of_instances)]
 
-        for i in range(0, len(y) - 1):
-            one_hot_matrix[i][y[i] - 1] = 1
+        for i in range(0, len(y)):
+            one_hot_matrix[i][y[i]] = 1
 
         return one_hot_matrix
 

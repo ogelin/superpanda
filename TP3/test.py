@@ -24,7 +24,7 @@ X_test = s.transform(X_test)
 cl = SoftmaxClassifier()
 
 # train on X_train and not on X_test to avoid overfitting
-train_p = cl.fit_predict(X_train,y_train)
+train_p = cl.fit_predict(X_train, y_train)
 test_p = cl.predict(X_test)
 
 # display precision, recall and f1-score on train/test set

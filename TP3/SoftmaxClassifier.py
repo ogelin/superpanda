@@ -5,8 +5,8 @@ import numpy as np
 class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """A softmax classifier"""
 
-    def __init__(self, lr=0.1, alpha=100, n_epochs=1000, eps=1.0e-5, threshold=1.0e-10, regularization=False,
-                 early_stopping=False):
+    def __init__(self, lr=0.1, alpha=100, n_epochs=1000, eps=1.0e-5, threshold=1.0e-10, regularization=True,
+                 early_stopping=True):
 
         """
             self.lr : the learning rate for weights update during gradient descent
@@ -191,11 +191,15 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     def _cost_function(self, probabilities, y):
         y_one_hot = self._one_hot(y)
         proababilities = np.clip(probabilities, self.eps, 1 - self.eps)
-        log_loss = -np.sum(np.sum(y_one_hot * np.log(proababilities), axis=1)) / y.shape[0]
+        l2 = 0
 
         if self.regularization:
-            l2 = np.sqrt(sum((sum(np.square(self.theta_)))))
-            log_loss = log_loss + l2
+            nb_examples = y.shape[0]
+
+            l2 = self._calculate_regularization()
+            #log_loss = log_loss + l2/nb_examples
+
+        log_loss = -np.sum(np.sum(y_one_hot * np.log(proababilities + l2), axis=1)) / y.shape[0]
 
         return log_loss
 
@@ -267,7 +271,18 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         grad = np.dot(X.T, delta) / X.shape[0]
 
         if self.regularization:
-            l2 = np.sqrt(sum((sum(np.square(self.theta_)))))
-            grad += l2
+            grad += self._calculate_regularization_derivative() / y.shape[0]
 
         return grad
+
+    def _calculate_regularization(self):
+        theta_prime = self.theta_[:-1, :]  # remove bias
+        theta_square = np.square(theta_prime)
+        l2 = self.alpha * np.sum((np.sum(theta_square)))
+        return l2
+
+    def _calculate_regularization_derivative(self):
+        theta_prime = self.theta_[:-1, :]  # remove bias
+        l2_derivative = self.alpha*2*np.sum(np.sum(theta_prime))
+        return l2_derivative
+

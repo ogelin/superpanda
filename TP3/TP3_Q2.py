@@ -42,4 +42,49 @@ X_train = X_train.drop(columns = ["Color","Name","DateTime"])
 X_test = X_test.drop(columns = ["Color","Name","DateTime"])
 X_train.head()
 
+#Question 11: AgeuponOutcome (1 point)
+# transform all in number of weeks and have only one column (no onehot)
 
+#Question 12: AnimalType (1 point)
+# binary  category in one column no onehot
+
+#Question 13: SexuponOutcome (1 point)
+# separate into 2 words
+# combine the neutered and spayed vs the intact for a binary category
+
+#Question 14: Breed (1 point)
+# 1 separate this column into 2: first breed / second breed (if known, if not known put MIX)
+# 2 separate each column into categories
+# 3 transform each column into a onehot
+
+""" Pipeline
+Question 15: Complétez pipeline ci-dessous (4 points)"""
+
+from preprocessing import TransformationWrapper
+from preprocessing import LabelEncoderP
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.compose import ColumnTransformer
+
+# pipeline_color = Pipeline([
+#     ("name", Transformer()),
+# ])
+
+
+# full_pipeline = ColumnTransformer([
+#         ("color", pipeline_color, ["Color"]),
+        
+
+#     ])
+
+#Lancez le pipeline
+
+# column_names = []
+# X_train_prepared = pd.DataFrame(full_pipeline.fit_transform(X_train),columns = columns)
+# X_test_prepared = pd.DataFrame(full_pipeline.fit_transform(X_test),columns = columns)
+
+
+
+#Concaténation des deux parties du dataset:
+
+# X_train = pd.concat([X_train1,X_train_prepared], axis = 1)
+# X_test = pd.concat([X_test1,X_test_prepared], axis = 1)

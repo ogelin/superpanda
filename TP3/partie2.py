@@ -20,10 +20,6 @@ X_test = X_test.drop(columns = ["ID"])
 
 X_train, y_train = X_train.drop(columns = ["OutcomeType"]),X_train["OutcomeType"]
 
-print((X_train["AgeuponOutcome"].value_counts()/len(X_train)))
-print(X_test.head())
-print(y_train.head())
-
 X_train1 = pd.read_csv("data/train_preprocessed.csv")
 X_test1 = pd.read_csv("data/test_preprocessed.csv")
 
@@ -93,13 +89,13 @@ def parse_days(text):
     quantity, unit = text.split(" ")
 
     if "day" in unit:
-        return quantity
+        return int(quantity)
     elif "week" in unit:
-        return quantity * 7
+        return int(quantity) * 7
     elif "month" in unit:
-        return quantity * 30
+        return int(quantity) * 30
     elif "year" in unit:
-        return quantity * 365
+        return int(quantity) * 365
 
 pipeline_age = Pipeline([
     ('age', TransformationWrapper(transformation=parse_days))
@@ -110,7 +106,7 @@ pipeline_age = Pipeline([
 full_pipeline = ColumnTransformer([
         ("AnimalType", pipeline_AnimalType, ["AnimalType"]),
         ("SexuponOutcome", pipeline_SexuponOutcome_u, ["SexuponOutcome"]),
-    ("AgeuponOutcome", pipeline_age, ["AgeuponOutcome"])
+        ("AgeuponOutcome", pipeline_age, ["AgeuponOutcome"])
     ])
 
 columns = ["AnimalType", "Not-Sterilize", "Sterilize", "Unknown-Sterilize", "Female", "Male", "Unknown-Sex", "Age in days"]

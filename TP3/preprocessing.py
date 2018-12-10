@@ -10,8 +10,8 @@ class TransformationWrapper(BaseEstimator,TransformerMixin):
         
         self.transformation = transformation
         self.fitation = fitation
-        
-    
+
+
         
     def fit(self, X, y=None):
         X = pd.DataFrame(X)
@@ -36,8 +36,7 @@ class TransformationWrapper(BaseEstimator,TransformerMixin):
                 lambda row: pd.Series( self.transformation(row[self.column_name_])),
                 axis = 1
             ))
-        
-        
+
 from sklearn.preprocessing import LabelEncoder
 class LabelEncoderP(LabelEncoder):
     def fit(self, X, y=None):

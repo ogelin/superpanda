@@ -72,19 +72,23 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
         self.theta_ = np.random.rand(X.shape[1] + 1, self.nb_classes)
 
+        i = 0
+
         for epoch in range(self.n_epochs):
+            i += 1
+
             logits = np.dot(X_bias, self.theta_)
             probabilities = np.clip(self._softmax(logits), self.eps, 1 - self.eps)
 
             loss = self._cost_function(probabilities, y)
             self.theta_ = self.theta_ - self.lr * self._get_gradient(X_bias, y, probabilities)
-            self.theta_ = self.theta_
 
             self.losses_.append(loss)
             print(loss)
 
             if self.early_stopping:
                 if np.abs(loss-prev_loss) < self.threshold:
+                    print("early stop after ", i, " epochs")
                     return self
 
             prev_loss = loss
@@ -190,16 +194,16 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
     def _cost_function(self, probabilities, y):
         y_one_hot = self._one_hot(y)
-        proababilities = np.clip(probabilities, self.eps, 1 - self.eps)
+        probs = np.clip(probabilities, self.eps, 1 - self.eps)
+
         l2 = 0
 
         if self.regularization:
-            nb_examples = y.shape[0]
-
             l2 = self._calculate_regularization()
-            #log_loss = log_loss + l2/nb_examples
 
-        log_loss = -np.sum(np.sum(y_one_hot * np.log(proababilities + l2), axis=1)) / y.shape[0]
+        double_sum = -np.sum(np.sum(y_one_hot * np.log(probs), axis=1))
+
+        log_loss = (double_sum + l2) / y.shape[0]
 
         return log_loss
 
@@ -268,21 +272,33 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
         delta = probas - y_one_hot
 
-        grad = np.dot(X.T, delta) / X.shape[0]
+        grad = np.dot(X.T, delta) / y.shape[0]
 
         if self.regularization:
             grad += self._calculate_regularization_derivative() / y.shape[0]
 
         return grad
 
+    """
+    l2 = alpha * sum(sum( w^2))
+    """
     def _calculate_regularization(self):
-        theta_prime = self.theta_[:-1, :]  # remove bias
-        theta_square = np.square(theta_prime)
-        l2 = self.alpha * np.sum((np.sum(theta_square)))
+        sq = np.square(self._theta_without_bias())
+        l2 = np.sum(sq)
+        l2 = self.alpha * l2
         return l2
 
+    """
+    l2' = alpha * 2 * w
+    """
     def _calculate_regularization_derivative(self):
-        theta_prime = self.theta_[:-1, :]  # remove bias
-        l2_derivative = self.alpha*2*np.sum(np.sum(theta_prime))
+        l2_derivative = self.alpha*2*self._theta_without_bias()
         return l2_derivative
 
+    """
+    Return theta matrix with last row replaced with 0s
+    """
+    def _theta_without_bias(self):
+        theta_prime = self.theta_
+        theta_prime[-1, :] = 0
+        return theta_prime

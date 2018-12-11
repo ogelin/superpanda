@@ -12,6 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import StandardScaler
 import os
+import random
 
 exported_train_file = "X_train.csv"
 exported_test_file = "X_test.csv"
@@ -78,7 +79,7 @@ pipeline_AnimalType = Pipeline([
     ("encode", LabelEncoderP()),
 ])
 
-###################### SexuponOutcome ###############################
+###################### SexuponOutcome ###########################
 def parse_sterilize(text):
     sterilize, _ = text.split(" ")
     if (sterilize == "Neutered") or (sterilize == "Spayed"):
@@ -87,7 +88,7 @@ def parse_sterilize(text):
 
 pipeline_sterilize = Pipeline([
     ('sterilize', TransformationWrapper(transformation=parse_sterilize)),
-    ("encode", OneHotEncoder(categories='auto', sparse=False))
+    ("encode", LabelEncoderP()),
 ])
 
 def parse_gender(text):
@@ -96,19 +97,22 @@ def parse_gender(text):
 
 pipeline_gender = Pipeline([
     ('gender', TransformationWrapper(transformation=parse_gender)),
-    ("encode", OneHotEncoder(categories='auto', sparse=False))
+    ("encode", LabelEncoderP()),
 ])
 
 def parse_unknown(text):
     if text == "Unknown":
-        res = "unknown unknown"
+        if random.random() > 0.5:
+            res = "Intact Male"
+        else:
+            res = "Intact Female"
     else :
         res = text
     return res
 
 pipeline_SexuponOutcome_u = Pipeline([
-    ('SexuponOutcome1', TransformationWrapper(transformation = parse_unknown)),
-    ("SexuponOutcome2", SimpleImputer(strategy='constant', fill_value='unknown unknown')),
+    ("SexuponOutcome1", SimpleImputer(strategy='constant', fill_value='Unknown')),
+    ('SexuponOutcome2', TransformationWrapper(transformation = parse_unknown)),
     ('feats', FeatureUnion([
         ('sterilize', pipeline_sterilize),
         ('gender', pipeline_gender)
@@ -134,39 +138,50 @@ def parse_days(text):
 pipeline_age = Pipeline([
     ('most_frequent', SimpleImputer(strategy="most_frequent")),
     ('age', TransformationWrapper(transformation=parse_days)),
-    ('scaler', StandardScaler()) #normalisé
+    ('scaler', StandardScaler(with_mean=False)) #normalisé
 ])
 
 ###################### breed ###############################
-
+''' Notre version 1 avec tous les key-word des breeds
 vect = CountVectorizer()
-
 def parse_breed(text):
     if "/" in text:
         if "Mix" not in text:
             text += " Mix "
     return text
-
 #CountVectorizer
 pipeline_breed = Pipeline([
-
     ('name_extractor', TextExtractor('Breed')),
     ('breed', vect),
     ('array', TransformerToArray()),
 ])
-
 def get_breed_names(data_frame_serie):
     vectorizer = CountVectorizer()
     X = vectorizer.fit_transform(data_frame_serie)
     return vectorizer.get_feature_names()
+'''
+def parse_breed(text):
+    if "/" in text:
+        text.replace("/", " ")
+        text += " Mix"
+    if "Mix" in text or "mix" in text or len(text.split(" ")) > 3:
+        text = "Mix"
+    else :
+        text = "Pure"
+    return text
 
+pipeline_breed = Pipeline([
+    ("Breed1", SimpleImputer(strategy='constant', fill_value='Mix')),
+    ('Parse_Breed', TransformationWrapper(transformation=parse_breed)),
+    ("encode", LabelEncoderP()),
+])
 
 ###################### full_pipeline ###############################
 full_pipeline = ColumnTransformer([
         ("AnimalType", pipeline_AnimalType, ["AnimalType"]),
         ("SexuponOutcome", pipeline_SexuponOutcome_u, ["SexuponOutcome"]),
         ("AgeuponOutcome", pipeline_age, ["AgeuponOutcome"]),
-        #("Breed", pipeline_breed, ["Breed"])
+        ("Breed", pipeline_breed, ["Breed"])
     ])
 
 ###################### utilities ###############################
@@ -185,7 +200,7 @@ def get_formated_data():
 ###################### data processing ###############################
 
 def data_processing():
-    col = ["AnimalType", "Not-Sterilize", "Sterilize", "Unknown-Sterilize", "Female", "Male", "Unknown-Sex", "Age in days"] # with breeds + get_breed_names(X_train.Breed)
+    col = ["AnimalType", "Sterilize-Type", "Sex", "Age in days", "Breed-Type"] # + get_breed_names(X_train.Breed)
 
     X_train_prepared = pd.DataFrame(full_pipeline.fit_transform(X_train), columns=col)
     X_test_prepared = pd.DataFrame(full_pipeline.transform(X_test), columns=col)
@@ -194,13 +209,13 @@ def data_processing():
     test = pd.concat([X_test1,X_test_prepared], axis=1)
 
     # Export data
-    n = train.shape[1] - 13
+    n = train.shape[1] - 9
     #With Breeds
-    #np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f'] + ['%i'] * n))
-    #np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f'] + ['%i'] * n))
+    np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 7 + ['%1.8f'] + ['%i'] * n))
+    np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 7 + ['%1.8f'] + ['%i'] * n))
     # Without Breeds
-    np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f']))
-    np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f']))
+    #np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 7 + ['%1.8f']))
+    #np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 7 + ['%1.8f']))
 
     return train, test
 
@@ -268,7 +283,7 @@ def compare(models, X, y, nb_runs):
             precision[model_i][run_i], recall[model_i][run_i], fscore[model_i][run_i], _ = precision_recall_fscore_support(y_test, test_p, average="macro")
             losses[model_i][run_i] = log_loss(y_test,test_proba, labels=[0,1,2,3,4])
             print("test : " + str(precision_recall_fscore_support(y_test, test_p, average="macro")))
-            print("loss1 : " + str(log_loss(y_test,test_proba, labels=[0,1,2,3,4])))
+            print("loss : " + str(log_loss(y_test,test_proba, labels=[0,1,2,3,4])))
             model_i = model_i + 1
 
         run_i = run_i + 1
@@ -285,10 +300,10 @@ def compare(models, X, y, nb_runs):
     recall_std = np.std(recall, axis=1)
     fscore_std = np.std(fscore, axis=1)
 
-    losses_mean_std = np.concatenate((losses_mean, losses_std), axis=0)
-    precision_mean_std = np.concatenate((precision_mean, precision_std), axis=0)
-    recall_mean_std = np.concatenate((recall_mean, recall_std), axis=0)
-    fscore_mean_std = np.concatenate((fscore_mean, fscore_std), axis=0)
+    losses_mean_std = np.concatenate((losses_mean, losses_std), axis=1)
+    precision_mean_std = np.concatenate((precision_mean, precision_std), axis=1)
+    recall_mean_std = np.concatenate((recall_mean, recall_std), axis=1)
+    fscore_mean_std = np.concatenate((fscore_mean, fscore_std), axis=1)
     return losses_mean_std, precision_mean_std, recall_mean_std, fscore_mean_std
 
 
@@ -297,12 +312,14 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 nb_run = 10
 models = [
-    MLPClassifier(early_stopping=True),
-    #AdaBoostClassifier(),
-    #RandomForestClassifier(),
-    #SoftmaxClassifier(early_stopping=True),
+    MLPClassifier(),
+    RandomForestClassifier(),
+    SoftmaxClassifier(early_stopping=True)
 ]
 scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
 losses_mean_std, precision_mean_std, recall_mean_std, fscore_mean_std = compare(models,X_train,y_train_label,nb_run) # ,scoring)
@@ -314,19 +331,17 @@ print("recall: ")
 print(recall_mean_std)
 print("f-score: ")
 print(fscore_mean_std)
-'''
+''' 
+Nos meilleurs résultats avec MLPClassifier().
+--- Format: [mean std ]---
 loss: 
-[8.64887971e-01 1.54827304e+00 3.23940740e+00 1.02447940e+00
- 1.18225713e-02 1.82485601e-03 2.20943004e-01 1.07178216e-02]
+[0.83642663 0.01124549]
 precision: 
-[0.49209958 0.45394346 0.46818065 0.37182011 0.02390654 0.01723536
- 0.03237296 0.03470379]
+[0.5111747  0.05678328]
 recall: 
-[0.4101342  0.40056025 0.41118175 0.351327   0.01378395 0.00989712
- 0.0122929  0.00601918]
+[0.41355423 0.01116258]
 f-score: 
-[0.4175278  0.41008198 0.42463633 0.34247657 0.01631941 0.01258704
- 0.01748719 0.00759246]
+[0.42211346 0.01240586]
  '''
 
 # - Question 17 ------------------------------------------------------------------------------------
@@ -353,7 +368,6 @@ print(clf.score(X_train, y_train))
 print(clf.best_params_)
 '''
 
-i = 0
 # best_model =
 # pred_test = pd.Series(best_model.transform(X_test))
 # pred_test.to_csv("test_prediction.csv",index = False)

@@ -5,7 +5,7 @@ import numpy as np
 class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """A softmax classifier"""
 
-    def __init__(self, lr=0.1, alpha=100, n_epochs=1000, eps=1.0e-5, threshold=1.0e-10, regularization=True,
+    def __init__(self, lr=0.1, alpha=100, n_epochs=1000, eps=1.0e-5, threshold=1.0e-10, regularization=False,
                  early_stopping=True):
 
         """
@@ -84,7 +84,7 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             self.theta_ = self.theta_ - self.lr * self._get_gradient(X_bias, y, probabilities)
 
             self.losses_.append(loss)
-            print(loss)
+            #print(loss)
 
             if self.early_stopping:
                 if np.abs(loss-prev_loss) < self.threshold:

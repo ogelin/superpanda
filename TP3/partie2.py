@@ -202,11 +202,94 @@ def data_processing():
 
 ################### MAIN ######################################
 
-# PARTIE 2
+# --- PARTIE 2 ---
 X_train, X_test = get_formated_data()
 
+# --- PARTIE 3 ---
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import precision_recall_fscore_support
+
+target_label = LabelEncoder()
+y_train_label = target_label.fit_transform(y_train)
+print(target_label.classes_)
 
 
+# BONUS 2 : En observant la distribution des classes de l'attribut cible (à l'aide des fonctions de visualisation de
+# pandas), justifiez l'utilisation de l'objet StratifiedKFold de sklearn pour la division de l'ensemble d'entraînement
+# lors de cross-validation en comparaison à une méthode pûrement aléatoire
+from sklearn.model_selection import StratifiedKFold
+'''
+RÉPONSE: 
+Voici l'observation des classes de l'attribut cible : 
+   print((y_train.value_counts()/len(y_train))[:5])
+   Adoption           0.402896
+   Transfer           0.352501
+   Return_to_owner    0.179056
+   Euthanasia         0.058177
+   Died               0.007370
+On voit qu'il y a 3 classes qui sont vraiment plus présentes que les 2 autres dans nos données. Avec une approche
+aléatoire, on ne pourrait pas s'assurer hors de tous doute d'avoir la présence de ces classes plus rares dans notre
+set de test. Pour sa part, StratifiedKFold offre de garder la présence de chaque classe dans chaque fold et de facon
+proportionnel à l'ensemble de données complet. Comme cela, on s'assure de valider aussi avec les classes les moins
+présentes.
+'''
+
+def compare(models, X, y, nb_runs):
+
+    #Init tables that will contain metrics values
+    losses = np.zeros(shape=(len(models),nb_runs))
+    precision = np.zeros(shape=(len(models),nb_runs))
+    recall = np.zeros(shape=(len(models),nb_runs))
+    fscore = np.zeros(shape=(len(models),nb_runs))
+
+    skf = StratifiedKFold(n_splits=nb_runs)
+
+    #Start the cross-validation
+    run_i = 0
+    for train_index, test_index in skf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+
+        # For each model
+        model_i = 0
+        for model in models:
+            train_p = model.fit_predict(X_train, y_train)
+            test_p = model.predict(X_test)
+            print("train : " + str(precision_recall_fscore_support(y_train, train_p, average="macro")))
+            print("test : " + str(precision_recall_fscore_support(y_test, test_p, average="macro")))
+
+            # On enregistre les métriques
+            precision[model_i][run_i], recall[model_i][run_i], fscore[model_i][run_i], _ = precision_recall_fscore_support(y_test, test_p, average="macro")
+            losses[model_i][run_i] = model.losses_[-1]
+            print("loss = " + str(model.losses_[-1]))
+            model_i = model_i + 1
+
+        run_i = run_i + 1
+
+    # Moyennes par model
+    losses_mean = np.mean(losses, axis=1)
+    precision_mean = np.mean(precision, axis=1)
+    recall_mean = np.mean(recall, axis=1)
+    fscore_mean = np.mean(fscore, axis=1)
+
+    # Écart type par model
+    losses_std = np.std(losses, axis=1)
+    precision_std = np.std(precision, axis=1)
+    recall_std = np.std(recall, axis=1)
+    fscore_std = np.std(fscore, axis=1)
+
+    losses_mean_std = np.concatenate((losses_mean, losses_std), axis=0)
+    precision_mean_std = np.concatenate((precision_mean, precision_std), axis=0)
+    recall_mean_std = np.concatenate((recall_mean, recall_std), axis=0)
+    fscore_mean_std = np.concatenate((fscore_mean, fscore_std), axis=0)
+    return losses_mean_std, precision_mean_std, recall_mean_std, fscore_mean_std
 
 
-
+from SoftmaxClassifier import SoftmaxClassifier
+nb_run = 2
+models = [
+    SoftmaxClassifier(),
+]
+scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
+compare(models,X_train,y_train_label,nb_run) # ,scoring)  mettre 1
+i = 0

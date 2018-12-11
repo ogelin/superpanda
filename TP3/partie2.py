@@ -208,6 +208,7 @@ X_train, X_test = get_formated_data()
 # --- PARTIE 3 ---
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import log_loss
 
 target_label = LabelEncoder()
 y_train_label = target_label.fit_transform(y_train)
@@ -247,21 +248,22 @@ def compare(models, X, y, nb_runs):
     #Start the cross-validation
     run_i = 0
     for train_index, test_index in skf.split(X, y):
+        print("run: " + str(run_i))
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
         # For each model
         model_i = 0
         for model in models:
-            train_p = model.fit_predict(X_train, y_train)
+            print("model_i: " + str(model_i))
+            model.fit(X_train, y_train)
             test_p = model.predict(X_test)
-            print("train : " + str(precision_recall_fscore_support(y_train, train_p, average="macro")))
-            print("test : " + str(precision_recall_fscore_support(y_test, test_p, average="macro")))
-
+            test_proba = model.predict_proba(X_test)
             # On enregistre les métriques
             precision[model_i][run_i], recall[model_i][run_i], fscore[model_i][run_i], _ = precision_recall_fscore_support(y_test, test_p, average="macro")
-            losses[model_i][run_i] = model.losses_[-1]
-            print("loss = " + str(model.losses_[-1]))
+            losses[model_i][run_i] = log_loss(y_test,test_proba, labels=[0,1,2,3,4])
+            print("test : " + str(precision_recall_fscore_support(y_test, test_p, average="macro")))
+            print("loss1 : " + str(log_loss(y_test,test_proba, labels=[0,1,2,3,4])))
             model_i = model_i + 1
 
         run_i = run_i + 1
@@ -286,10 +288,24 @@ def compare(models, X, y, nb_runs):
 
 
 from SoftmaxClassifier import SoftmaxClassifier
-nb_run = 2
+from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier
+nb_run = 10
 models = [
-    SoftmaxClassifier(),
+    MLPClassifier(early_stopping=True),
+    AdaBoostClassifier(),
+    RandomForestClassifier(),
+    SoftmaxClassifier(early_stopping=True),
 ]
 scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
-compare(models,X_train,y_train_label,nb_run) # ,scoring)  mettre 1
-i = 0
+losses_mean_std, precision_mean_std, recall_mean_std, fscore_mean_std = compare(models,X_train,y_train_label,nb_run) # ,scoring)
+print("loss: ")
+print(losses_mean_std)
+print("precision: ")
+print(precision_mean_std)
+print("recall: ")
+print(recall_mean_std)
+print("f-score: ")
+print(fscore_mean_std)

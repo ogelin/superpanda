@@ -342,3 +342,18 @@ print(confuse_matrix)
 import matplotlib.pyplot as plt
 print(target_label.classes_)
 pd.Series(y_train_label).hist()
+
+# - BONUS 3: Optimisation des hyper-paramètre ------------------------------------------------------------------------------------
+'''
+from sklearn.model_selection import GridSearchCV
+parameters = {'solver': ['lbfgs'], 'max_iter': [1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000 ], 'alpha': 10.0 ** -np.arange(1, 10), 'hidden_layer_sizes':np.arange(10, 15), 'random_state':[0,1,2,3,4,5,6,7,8,9]}
+clf = GridSearchCV(MLPClassifier(), parameters, n_jobs=-1)
+clf.fit(X_train, y_train)
+print(clf.score(X_train, y_train))
+print(clf.best_params_)
+'''
+
+i = 0
+# best_model =
+# pred_test = pd.Series(best_model.transform(X_test))
+# pred_test.to_csv("test_prediction.csv",index = False)

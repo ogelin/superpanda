@@ -134,7 +134,7 @@ def parse_days(text):
 pipeline_age = Pipeline([
     ('most_frequent', SimpleImputer(strategy="most_frequent")),
     ('age', TransformationWrapper(transformation=parse_days)),
-    ('scaler', StandardScaler())
+    ('scaler', StandardScaler()) #normalisé
 ])
 
 ###################### breed ###############################
@@ -166,7 +166,7 @@ full_pipeline = ColumnTransformer([
         ("AnimalType", pipeline_AnimalType, ["AnimalType"]),
         ("SexuponOutcome", pipeline_SexuponOutcome_u, ["SexuponOutcome"]),
         ("AgeuponOutcome", pipeline_age, ["AgeuponOutcome"]),
-        ("Breed", pipeline_breed, ["Breed"])
+        #("Breed", pipeline_breed, ["Breed"])
     ])
 
 ###################### utilities ###############################
@@ -185,7 +185,7 @@ def get_formated_data():
 ###################### data processing ###############################
 
 def data_processing():
-    col = ["AnimalType", "Not-Sterilize", "Sterilize", "Unknown-Sterilize", "Female", "Male", "Unknown-Sex", "Age in days"] + get_breed_names(X_train.Breed)
+    col = ["AnimalType", "Not-Sterilize", "Sterilize", "Unknown-Sterilize", "Female", "Male", "Unknown-Sex", "Age in days"] # with breeds + get_breed_names(X_train.Breed)
 
     X_train_prepared = pd.DataFrame(full_pipeline.fit_transform(X_train), columns=col)
     X_test_prepared = pd.DataFrame(full_pipeline.transform(X_test), columns=col)
@@ -195,8 +195,12 @@ def data_processing():
 
     # Export data
     n = train.shape[1] - 13
-    np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f'] + ['%i'] * n))
-    np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f'] + ['%i'] * n))
+    #With Breeds
+    #np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f'] + ['%i'] * n))
+    #np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f'] + ['%i'] * n))
+    # Without Breeds
+    np.savetxt(exported_train_file, train, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f']))
+    np.savetxt(exported_test_file, test, fmt=','.join(['%1.8f'] + ['%i'] * 11 + ['%1.8f']))
 
     return train, test
 
@@ -235,6 +239,7 @@ proportionnel à l'ensemble de données complet. Comme cela, on s'assure de vali
 présentes.
 '''
 
+# - Question 16 ------------------------------------------------------------------------------------
 def compare(models, X, y, nb_runs):
 
     #Init tables that will contain metrics values
@@ -295,9 +300,9 @@ from sklearn.gaussian_process import GaussianProcessClassifier
 nb_run = 10
 models = [
     MLPClassifier(early_stopping=True),
-    AdaBoostClassifier(),
-    RandomForestClassifier(),
-    SoftmaxClassifier(early_stopping=True),
+    #AdaBoostClassifier(),
+    #RandomForestClassifier(),
+    #SoftmaxClassifier(early_stopping=True),
 ]
 scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
 losses_mean_std, precision_mean_std, recall_mean_std, fscore_mean_std = compare(models,X_train,y_train_label,nb_run) # ,scoring)
@@ -309,3 +314,31 @@ print("recall: ")
 print(recall_mean_std)
 print("f-score: ")
 print(fscore_mean_std)
+'''
+loss: 
+[8.64887971e-01 1.54827304e+00 3.23940740e+00 1.02447940e+00
+ 1.18225713e-02 1.82485601e-03 2.20943004e-01 1.07178216e-02]
+precision: 
+[0.49209958 0.45394346 0.46818065 0.37182011 0.02390654 0.01723536
+ 0.03237296 0.03470379]
+recall: 
+[0.4101342  0.40056025 0.41118175 0.351327   0.01378395 0.00989712
+ 0.0122929  0.00601918]
+f-score: 
+[0.4175278  0.41008198 0.42463633 0.34247657 0.01631941 0.01258704
+ 0.01748719 0.00759246]
+ '''
+
+# - Question 17 ------------------------------------------------------------------------------------
+# Train selected model
+selected_model = MLPClassifier(early_stopping=True)
+selected_model.fit(X_train,y_train_label)
+y_pred = selected_model.predict(X_train)
+
+from sklearn.metrics import confusion_matrix
+confuse_matrix = pd.DataFrame(confusion_matrix(y_train_label, y_pred), columns = target_label.classes_, index = target_label.classes_)
+print(confuse_matrix)
+
+import matplotlib.pyplot as plt
+print(target_label.classes_)
+pd.Series(y_train_label).hist()

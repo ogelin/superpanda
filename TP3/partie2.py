@@ -377,6 +377,6 @@ test_proba = clf.predict_proba(X_train)
 print("precision, recall, fscore, support : \n" + str(precision_recall_fscore_support(y_train, test_p, average="macro")))
 print("loss : " + str(log_loss(y_train_label, test_proba, labels=[0, 1, 2, 3, 4])))
 
-# best_model =
-# pred_test = pd.Series(best_model.transform(X_test))
-# pred_test.to_csv("test_prediction.csv",index = False)
+best_model = clf
+pred_test = pd.Series(best_model.predict(X_test))
+pred_test.to_csv("test_prediction.csv",index = False)

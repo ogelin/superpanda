@@ -268,7 +268,7 @@ def compare(models, X, y, nb_runs):
     #Start the cross-validation
     run_i = 0
     for train_index, test_index in skf.split(X, y):
-        print("run: " + str(run_i))
+        print("run: " + str(run_i) + " in process ...")
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
@@ -289,16 +289,16 @@ def compare(models, X, y, nb_runs):
         run_i = run_i + 1
 
     # Moyennes par model
-    losses_mean = np.mean(losses, axis=1)
-    precision_mean = np.mean(precision, axis=1)
-    recall_mean = np.mean(recall, axis=1)
-    fscore_mean = np.mean(fscore, axis=1)
+    losses_mean = np.mean(losses, axis=1).reshape((len(models),1))
+    precision_mean = np.mean(precision, axis=1).reshape((len(models),1))
+    recall_mean = np.mean(recall, axis=1).reshape((len(models),1))
+    fscore_mean = np.mean(fscore, axis=1).reshape((len(models),1))
 
     # Écart type par model
-    losses_std = np.std(losses, axis=1)
-    precision_std = np.std(precision, axis=1)
-    recall_std = np.std(recall, axis=1)
-    fscore_std = np.std(fscore, axis=1)
+    losses_std = np.std(losses, axis=1).reshape((len(models),1))
+    precision_std = np.std(precision, axis=1).reshape((len(models),1))
+    recall_std = np.std(recall, axis=1).reshape((len(models),1))
+    fscore_std = np.std(fscore, axis=1).reshape((len(models),1))
 
     losses_mean_std = np.concatenate((losses_mean, losses_std), axis=1)
     precision_mean_std = np.concatenate((precision_mean, precision_std), axis=1)
@@ -315,11 +315,11 @@ from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-nb_run = 10
+nb_run = 2 # À CHANGER POUR TESTER
 models = [
     MLPClassifier(),
-    RandomForestClassifier(),
-    SoftmaxClassifier(early_stopping=True)
+    #RandomForestClassifier(),
+    #SoftmaxClassifier(early_stopping=True)
 ]
 scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
 losses_mean_std, precision_mean_std, recall_mean_std, fscore_mean_std = compare(models,X_train,y_train_label,nb_run) # ,scoring)
@@ -359,14 +359,23 @@ print(target_label.classes_)
 pd.Series(y_train_label).hist()
 
 # - BONUS 3: Optimisation des hyper-paramètre ------------------------------------------------------------------------------------
-'''
+
 from sklearn.model_selection import GridSearchCV
-parameters = {'solver': ['lbfgs'], 'max_iter': [1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000 ], 'alpha': 10.0 ** -np.arange(1, 10), 'hidden_layer_sizes':np.arange(10, 15), 'random_state':[0,1,2,3,4,5,6,7,8,9]}
-clf = GridSearchCV(MLPClassifier(), parameters, n_jobs=-1)
+#parameters = {'solver': ['lbfgs'], 'max_iter': [1000, 1500], 'alpha': 10.0 ** -np.arange(1, 10), 'hidden_layer_sizes':np.arange(10, 15), 'random_state':[0,1,2,3,4,5]}
+
+parameters = {'learning_rate_init': [0.1, 0.01, 0.001], 'activation': ['identity', 'logistic', 'tanh', 'relu'], 'solver': ['lbfgs', 'sgd', 'adam'] }
+
+clf = GridSearchCV(MLPClassifier(early_stopping =True), parameters, n_jobs=-1)
 clf.fit(X_train, y_train)
-print(clf.score(X_train, y_train))
+clf.predict_proba
+print("score (accuracy): " + str(clf.score(X_train, y_train)))
 print(clf.best_params_)
-'''
+
+#Maintenant faisons une comparaison avec les même métriques que plus haut.
+test_p = clf.predict(X_train)
+test_proba = clf.predict_proba(X_train)
+print("precision, recall, fscore, support : \n" + str(precision_recall_fscore_support(y_train, test_p, average="macro")))
+print("loss : " + str(log_loss(y_train_label, test_proba, labels=[0, 1, 2, 3, 4])))
 
 # best_model =
 # pred_test = pd.Series(best_model.transform(X_test))
